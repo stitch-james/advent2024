@@ -1,6 +1,8 @@
-import { Day } from "./types";
+import { Day01 } from "./days/day01";
+import { Day } from "./day";
 
 export const days: Day[] = [
+  new Day01(),
 ];
 
 if (require.main === module) {
