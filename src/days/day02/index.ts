@@ -37,7 +37,11 @@ export class Day02 extends Day {
   private isSafeWithDampener(report: number[]) {
     return (
       this.isSafe(report)
-      || [...report.keys()].some(toRemove => this.isSafe(report.filter((v, index) => index !== toRemove)))
+      || [...report.keys()].some(
+        toRemove => this.isSafe(
+          report.filter((v, index) => index !== toRemove)
+        )
+      )
     )
   }
 };
