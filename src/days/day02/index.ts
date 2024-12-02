@@ -9,7 +9,8 @@ export class Day02 extends Day {
   }
 
   doPart2(data: string[]) {
-    return 0;
+    const reports = this.parseData(data);
+    return reports.reduce((sum, report) => this.isSafeWithDampener(report) ? sum + 1 : sum, 0);
   }
 
   private parseData(data: string[]) {
@@ -31,5 +32,12 @@ export class Day02 extends Day {
         )
       )
     ));
+  }
+
+  private isSafeWithDampener(report: number[]) {
+    return (
+      this.isSafe(report)
+      || [...report.keys()].some(toRemove => this.isSafe(report.filter((v, index) => index !== toRemove)))
+    )
   }
 };
