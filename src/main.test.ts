@@ -11,6 +11,7 @@ interface TestInput {
 const testValues: TestInput[] = [
   {dayInt: 1, part1: 11, part2: 31},
   {dayInt: 2, part1: 2, part2: 4},
+  {dayInt: 3, part1: 161, part2: 0},
 ];
 
 test.each(testValues)('gets correct answer from example data, day $dayInt', ({ dayInt, part1, part2 }: TestInput) => {
