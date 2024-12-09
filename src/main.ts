@@ -6,6 +6,7 @@ import { Day04 } from "./days/day04";
 import { Day05 } from "./days/day05";
 import { Day06 } from "./days/day06";
 import { Day07 } from "./days/day07";
+import { Day08 } from "./days/day08";
 
 export const days: Day[] = [
   new Day01(),
@@ -15,6 +16,7 @@ export const days: Day[] = [
   new Day05(),
   new Day06(),
   new Day07(),
+  new Day08(),
 ];
 
 if (require.main === module) {
