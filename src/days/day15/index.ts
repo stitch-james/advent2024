@@ -5,6 +5,8 @@ enum Content {
   EMPTY = '.',
   WALL = '#',
   BOX = 'O',
+  BOX_LEFT = '[',
+  BOX_RIGHT = ']',
 }
 
 enum Movement {
@@ -19,24 +21,45 @@ interface Coords {
   colIndex: number
 }
 
+interface Warehouse {
+  contents: Content[][]
+  robot: Coords
+}
+
+class CannotMoveError extends Error {}
+
 export class Day15 extends Day {
   dayInt = 15;
 
   doPart1(data: string[]) {
-    const { warehouse, movements, robot } = this.parseData(data);
+    let { warehouse, movements } = this.parseData(data, false);
     movements.forEach(movement => {
-      if (this.canMove(warehouse, robot, movement)) {
-        this.move(warehouse, robot, movement);
+      try {
+        warehouse = this.move(warehouse, movement);
+      } catch (error) {
+        if (!(error instanceof CannotMoveError)) {
+          throw error;
+        }
       }
     });
-    return this.gpsTotal(warehouse);
+    return this.gpsTotal(warehouse.contents);
   }
 
   doPart2(data: string[]) {
-    return 0;
+    let { warehouse, movements } = this.parseData(data, true);
+    movements.forEach(movement => {
+      try {
+        warehouse = this.move(warehouse, movement);
+      } catch (error) {
+        if (!(error instanceof CannotMoveError)) {
+          throw error;
+        }
+      }
+    });
+    return this.gpsTotal(warehouse.contents);
   }
 
-  parseData(data: string[]) {
+  parseData(data: string[], double: boolean) {
     const warehouseArray: string[] = [];
     const movementsArray: string[] = [];
     let inWarehouse = true;
@@ -49,13 +72,29 @@ export class Day15 extends Day {
         movementsArray.push(line);
       }
     });
-    const warehouse: Content[][] = warehouseArray.map(line => [...line].map(char => char as Content));
+    const contents: Content[][] = warehouseArray.map(line => [...line].map(char => char as Content).map(content => {
+      if (!double) {
+        return [content];
+      }
+      switch (content) {
+        case Content.WALL:
+          return [Content.WALL, Content.WALL];
+        case Content.BOX:
+          return [Content.BOX_LEFT, Content.BOX_RIGHT];
+        case Content.EMPTY:
+          return [Content.EMPTY, Content.EMPTY];
+        case Content.ROBOT:
+          return [Content.ROBOT, Content.EMPTY];
+        default:
+          throw new Error('Nope nope!!!');
+      }
+    }).flat());
     const movements: Movement[] = movementsArray.map(line => [...line].map(char => char as Movement)).flat();
     const robot = {
       rowIndex: -1,
       colIndex: -1,
     };
-    warehouse.forEach((row, rowIndex) => row.forEach((content, colIndex) => {
+    contents.forEach((row, rowIndex) => row.forEach((content, colIndex) => {
       if (content === Content.ROBOT) {
         robot.rowIndex = rowIndex;
         robot.colIndex = colIndex;
@@ -65,9 +104,11 @@ export class Day15 extends Day {
       throw new Error('Where is that stupid robot???');
     }
     return {
-      warehouse,
+      warehouse: {
+        contents,
+        robot,
+      },
       movements,
-      robot,
     };
   }
 
@@ -82,20 +123,68 @@ export class Day15 extends Day {
     return false;
   }
 
-  move(warehouse: Content[][], robot: Coords, movement: Movement) {
-    let coords = robot;
-    warehouse[coords.rowIndex][coords.colIndex] = Content.EMPTY;
-    coords = this.moveCoords(coords, movement);
-    const push = warehouse[coords.rowIndex][coords.colIndex] === Content.BOX;
-    warehouse[coords.rowIndex][coords.colIndex] = Content.ROBOT;
-    robot.rowIndex = coords.rowIndex;
-    robot.colIndex = coords.colIndex;
-    if (push) {
-      do {
-        coords = this.moveCoords(coords, movement);
-      } while (warehouse[coords.rowIndex][coords.colIndex] === Content.BOX) 
-      warehouse[coords.rowIndex][coords.colIndex] = Content.BOX;
-    }
+  move(warehouse: Warehouse, movement: Movement) {
+    const newWarehouse = structuredClone(warehouse);
+    let toMove = [{
+      coords: warehouse.robot,
+      content: Content.ROBOT,
+    }];
+    newWarehouse.contents[warehouse.robot.rowIndex][warehouse.robot.colIndex] = Content.EMPTY;
+    let allEmpty: boolean;
+    do {
+      allEmpty = true;
+      const nextToMove = [];
+      const toMoveExpanded = toMove.map(({ coords, content }) => {
+        const expanded = [{
+          coords,
+          content,
+        }];
+        if ([Movement.UP, Movement.DOWN].includes(movement)) {
+          const nextCoords = this.moveCoords(coords, movement);
+          const nextContent = newWarehouse.contents[nextCoords.rowIndex][nextCoords.colIndex];
+          if (
+            nextContent === Content.BOX_LEFT
+            && !toMove.some(({ coords: moveCoords }) =>
+              moveCoords.rowIndex === coords.rowIndex && moveCoords.colIndex === coords.colIndex + 1
+            )
+          ) {
+            expanded.push({
+              coords: this.moveCoords(coords, Movement.RIGHT),
+              content: Content.EMPTY,
+            });
+          } else if (
+            nextContent === Content.BOX_RIGHT
+            && !toMove.some(({ coords: moveCoords }) =>
+              moveCoords.rowIndex === coords.rowIndex && moveCoords.colIndex === coords.colIndex - 1
+            )
+          ) {
+            expanded.push({
+              coords: this.moveCoords(coords, Movement.LEFT),
+              content: Content.EMPTY,
+            });
+          }
+        }
+        return expanded;
+      }).flat();
+      toMoveExpanded.forEach(({ coords, content }) => {
+        const nextCoords = this.moveCoords(coords, movement);
+        const nextContent = newWarehouse.contents[nextCoords.rowIndex][nextCoords.colIndex];
+        if (nextContent === Content.WALL) {
+          throw new CannotMoveError();
+        }
+        if ([Content.BOX, Content.BOX_LEFT, Content.BOX_RIGHT].includes(nextContent)) {
+          nextToMove.push({
+            coords: nextCoords,
+            content: nextContent,
+          });
+          allEmpty = false;
+        }
+        newWarehouse.contents[nextCoords.rowIndex][nextCoords.colIndex] = content;
+        toMove = nextToMove;
+      })
+    } while (!allEmpty)
+    newWarehouse.robot = this.moveCoords(warehouse.robot, movement);
+    return newWarehouse;
   }
 
   moveCoords(coords: Coords, movement: Movement) {
@@ -128,6 +217,6 @@ export class Day15 extends Day {
   gpsTotal(warehouse: Content[][]) {
     return warehouse.reduce((bigSum, row, rowIndex) => 
       bigSum + row.reduce((littleSum, content, colIndex) => 
-        littleSum + (content === Content.BOX ? (100 * rowIndex + colIndex) : 0), 0), 0);
+        littleSum + ([Content.BOX, Content.BOX_LEFT].includes(content) ? (100 * rowIndex + colIndex) : 0), 0), 0);
   }
 }
