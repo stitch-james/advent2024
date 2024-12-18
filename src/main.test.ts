@@ -4,7 +4,7 @@ import { days } from "./main";
 
 interface TestInput {
   dayInt: number,
-  part1: number,
+  part1: number | string,
   part2: number,
 }
 
@@ -25,6 +25,7 @@ const testValues: TestInput[] = [
   {dayInt: 14, part1: 12, part2: 0},
   {dayInt: 15, part1: 10092, part2: 9021},
   {dayInt: 16, part1: 7036, part2: 45},
+  {dayInt: 17, part1: '4,6,3,5,6,3,5,2,1,0', part2: 117440},
 ];
 
 test.each(testValues)('gets correct answer from example data, day $dayInt', ({ dayInt, part1, part2 }: TestInput) => {

@@ -3,7 +3,7 @@ import { readData } from "./data"
 export abstract class Day {
   abstract dayInt: number
 
-  abstract doPart1(data: string[]): number
+  abstract doPart1(data: string[]): number | string
 
   abstract doPart2(data: string[]): number
 
