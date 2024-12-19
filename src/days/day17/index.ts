@@ -109,7 +109,6 @@ export class Day17 extends Day {
 
   doPart2(data: string[]) {
     const programStr = data[4].split(': ')[1];
-    const programStrTruncated = programStr.split(',').slice(0, -2).join(',');
     let a = 0;
     const runningTarget = [];
     programStr.split(',').reverse().map(target => {
