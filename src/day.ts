@@ -5,7 +5,7 @@ export abstract class Day {
 
   abstract doPart1(data: string[]): number | string
 
-  abstract doPart2(data: string[]): number
+  abstract doPart2(data: string[]): number | string
 
   part1() {
     return this.doPart1(readData(this.dayInt, 1));
