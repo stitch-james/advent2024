@@ -29,7 +29,7 @@ const testValues: TestInput[] = [
   {dayInt: 18, part1: 22, part2: '6,1'},
   {dayInt: 19, part1: 6, part2: 16},
   {dayInt: 20, part1: 1, part2: 32 + 31 + 29 + 39 + 25 + 23 + 20 + 19 + 12 + 14 + 12 + 22 + 4 + 3},
-  {dayInt: 21, part1: 126384, part2: 0},
+  {dayInt: 21, part1: 126384, part2: 154115708116294},
 ];
 
 test.each(testValues)('gets correct answer from example data, day $dayInt', ({ dayInt, part1, part2 }: TestInput) => {
