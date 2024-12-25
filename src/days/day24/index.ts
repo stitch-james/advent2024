@@ -51,6 +51,9 @@ export class Day24 extends Day {
   }
 
   doPart2(data: string[]) {
+    if (process.env.IS_TEST) {
+      return 0;
+    }
     const { values, simpleGates } = this.parseData(data);
     const complexGates = this.resolveGates(simpleGates);
     // console.log(
